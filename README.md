@@ -1,1 +1,1 @@
-# Automatic-generation-of-vocabulary-lists-with-MWE-expressions
+This repository contains code and automatically generated vocabulary list presented in our paper "Automatic Generation of Vocabulary Lists with Multiword Expressions". The paper will be presented in MWE 2023 Workshop. 

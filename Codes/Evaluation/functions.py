@@ -44,7 +44,60 @@ def clean_list_of_dicts(list_of_dicts):
             cleaned_list_of_dicts.append(dictionary)
     return cleaned_list_of_dicts
 
+### Function that finds MWE's from the list of dicts and adds new key/value pair MWE and its value
+### Gold list is list of MWE from EVP/GSE
+def get_MWE(list_of_dicts, gold_list):
+    output_list = list_of_dicts
+    for i in range(len(list_of_dicts)-1):
+        MWE = list_of_dicts[i]["lemma"] + " " + list_of_dicts[i+1]["lemma"]
+        if MWE in gold_list:
+            if (output_list[i]["MWE"] == None) and (output_list[i+1]["MWE"] == None):
+                output_list[i]["MWE"] = MWE
+                output_list[i+1]["MWE"] = MWE
+        else:
+            MWE = list_of_dicts[i]["word"] + " " + list_of_dicts[i+1]["word"]
+            if MWE in gold_list:
+                if (output_list[i]["MWE"] == None) and (output_list[i+1]["MWE"] == None):
+                    output_list[i]["MWE"] = MWE
+                    output_list[i+1]["MWE"] = MWE
+    return output_list
 
+
+
+### Function that finds trigram MWE's from the list of dicts and adds new key/value pair MWE and its value
+### Gold list is list of MWE from EVP/GSE
+def get_trigram_MWE(list_of_dicts, gold_list):
+    output_list = list_of_dicts
+    for i in range(len(list_of_dicts)-2):
+        MWE = list_of_dicts[i]["lemma"] + " " + list_of_dicts[i+1]["lemma"] + " " + list_of_dicts[i+2]["lemma"]
+        if MWE in gold_list:
+            if (output_list[i]["MWE"] == None) and (output_list[i+1]["MWE"] == None) and (output_list[i+2]["MWE"] == None):
+                output_list[i]["MWE"] = MWE
+                output_list[i+1]["MWE"] = MWE
+                output_list[i+2]["MWE"] = MWE
+        else:
+            MWE = list_of_dicts[i]["word"] + " " + list_of_dicts[i+1]["word"] + " " + list_of_dicts[i+2]["word"]
+            if MWE in gold_list:
+                if (output_list[i]["MWE"] == None) and (output_list[i+1]["MWE"] == None) and (output_list[i+2]["MWE"] == None):
+                    output_list[i]["MWE"] = MWE
+                    output_list[i+1]["MWE"] = MWE
+                    output_list[i+2]["MWE"] = MWE
+    ##Include wildcard
+    for i in range(len(list_of_dicts)-2):
+        MWE = list_of_dicts[i]["lemma"] + " " + "wildcard" + " " + list_of_dicts[i+2]["lemma"]
+        if MWE in gold_list:
+            if (output_list[i]["MWE"] == None) and (output_list[i+1]["MWE"] == None) and (output_list[i+2]["MWE"] == None):
+                output_list[i]["MWE"] = MWE
+                output_list[i+1]["MWE"] = MWE
+                output_list[i+2]["MWE"] = MWE
+        else:
+            MWE = list_of_dicts[i]["word"] + " " + "wildcard" + " " + list_of_dicts[i+2]["word"]
+            if MWE in gold_list:
+                if (output_list[i]["MWE"] == None) and (output_list[i+1]["MWE"] == None) and (output_list[i+2]["MWE"] == None):
+                    output_list[i]["MWE"] = MWE
+                    output_list[i+1]["MWE"] = MWE
+                    output_list[i+2]["MWE"] = MWE
+    return output_list
 # ### Function that finds fourgram MWE's from the list of dicts and adds new key/value pair MWE and its value
 # ### Gold list is list of MWE from EVP/GSE
 def get_allgram_MWE(list_of_dicts, gold, gram):
@@ -121,8 +174,8 @@ def text_to_list_of_dict(exam, file_name):
         output_list.append(output_dict)
     my_file.close()
     output_list = clean_list_of_dicts(output_list)
-    output_list = get_allgram_MWE(output_list, gold_list, 3)
-    output_list = get_allgram_MWE(output_list, gold_list, 2)
+    output_list = get_trigram_MWE(output_list, gold_list)
+    output_list = get_MWE(output_list, gold_list)
     return output_list
 
 
@@ -132,7 +185,7 @@ def texts_to_nested_list(exam):
     texts_list = []
     for i in range(80):
         try:
-            file_name = str(i+1) + "text"
+            file_name = str(i+1) + "file"
             texts_list.append(text_to_list_of_dict(exam, file_name))
         except:
             pass
@@ -193,7 +246,7 @@ def thresholder(input, X):
 
 
 def number_of_words_calculator(vocabulary_list, list_of_dicts, X):
-    max_val = 50
+    max_val = 80
     if percentage_calculator_new(vocabulary_list, list_of_dicts) * 100 < X:
         return None
     if percentage_calculator_new(vocabulary_list[:max_val * 500], list_of_dicts) * 100 < X:
@@ -241,6 +294,37 @@ def number_of_words_calculator(vocabulary_list, list_of_dicts, X):
     return number_of_words_new
 
 
+## Changes answers in ascending order. 
+def changer(dictionary):
+    new_dict = dictionary
+    lis = []
+    for item in new_dict.keys():
+        if item == "Method":
+            pass
+        elif item == "TC":
+            pass
+        else:
+            lis.append(float(str(new_dict[item]).replace("/", "1000000")))
+    ## If value of previous level is higher then equalize the value of next to previous one
+    for i in range(len(lis)-1):
+        if lis[i] > lis[i+1]:
+            lis[i+1] = lis[i]
+    ## Convert to dictionary 
+    count = 0
+    for item in new_dict.keys():
+        if item == "Method":
+            pass
+        elif item == "TC":
+            pass
+        else:
+            value = str(lis[count]).replace("1000000.0","/")
+            ## If value is number then do rounding
+            if value == "/":
+                new_dict[item] = value
+            else:   
+                new_dict[item] = round(float(value))
+            count += 1
+    return new_dict
 
 
 
@@ -251,12 +335,12 @@ CPE = texts_to_nested_list("CPE")
 FCE = texts_to_nested_list("FCE")
 texts_to_nested_list_dict = {"KET" : KET, "PET" : PET, "FCE" : FCE, "CAE" : CAE, "CPE" : CPE}
 ### Function that for an given vocabulary list computes text comprehension and study time
-def evaluate(vocabulary, Levels, Y, k):
+def evaluate(vocabulary, levels, Y, k):
     output_dictionary = {}
     output_dictionary["Method"] = str(vocabulary)
     vocabulary_list = ranked_vocab_to_list(vocabulary)
     text_comprehension_sum = 0
-    for Level in Levels:
+    for Level in levels:
         nested_list = texts_to_nested_list_dict[Level]
         ## Get threshold values for each doc
         threshold_values = []
@@ -284,4 +368,5 @@ def evaluate(vocabulary, Levels, Y, k):
             text_comprehension += sum(i <= count for i in threshold_values) / k
         text_comprehension_sum += text_comprehension 
     output_dictionary["TC"] = text_comprehension_sum
+    output_dictionary = changer(output_dictionary)
     return output_dictionary
